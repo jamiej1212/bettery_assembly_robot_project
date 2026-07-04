@@ -4,60 +4,68 @@
 #   https://pymcprotocol.netlify.app/
 #==============================================
 
+from vendor.indy_utils import indydcp_client as client
 from pymcprotocol import Type3E
 
 
 # vendor.indy_utils.indydcp_client 래퍼
 class RobotClient:
+
+    def __init__(self, robot_ip: str, robot_name: str):
+        self.robot_ip = robot_ip
+        self.robot_name = robot_name
+        self.indy = client.IndyDCPClient(self.robot_ip, self.robot_name)
+        self._is_connected = False
+
     # ── 컨트롤러 연결/해제 ──
-    def connect():
-        print('Indy7 컨트롤러와 통신 연결')
-    def disconnect():
-        print('Indy7 컨트롤러와 통신 해제')
+    def connect(self) -> None:
+        if not self._is_connected:
+            self.indy.connect()
+            self._is_connected = True
+            print('Indy7 컨트롤러와 통신이 연결되었습니다.')
+        else:
+            print('Indy7 컨트롤러와 이미 통신 중입니다.')
 
-    # ── 모션 완료 여부 판별 ──    
-    def check_move_done(poll_interval=0.1):
-        print('모션 완료 여부 확인')
-
-    # ── 로봇 동작 ──
-    def move_to(position): #절대 좌표 모션 명령
-        print('Indy7 모션 명령 수행')
-    def move_by(offset): #상대 좌표 모션 명령
-        print('Indy7 모션 명령 수행')
-    def lower_by(z_offset): #하강 모션 명령
-        print('Indy7 하강 모션 명령 수행')
-    def raise_by(z_offset): #상승 모션 명령
-        print('Indy7 상승 모션 명령 수행')
-    def rotate_by(angle): #회전 모션 명령
-        print('Indy7 회전 모션 명령 수행')
-    def go_home(): #홈 포지션 이동 명령
-        print('Indy7 홈 포지션 이동 명령 수행')
-
-    # ── 그리퍼 동작 ──
-    def grab(): #그리퍼 닫기 명령
-        print('Indy7 그리퍼 닫기 명령 수행')
-    def release(): #리퍼 열기 명령
-        print('Indy7 그리퍼 열기 명령 수행')
-
-    # ── 안전 제어 ──
-    def pause(): #모션 일시정지 명령
-        print('Indy7 모션 일시정지 명령 수행')
-    def resume(): #모션 재개 명령
-        print('Indy7 모션 재개 명령 수행')
-    def reset_to_initial(): #초기 상태로 리셋 명령(비상정지)
-        print('Indy7 초기 상태로 리셋 명령 수행')
+    def disconnect(self) -> None:
+        if self._is_connected:
+            self.indy.disconnect()
+            self._is_connected = False
+            print('Indy7 컨트롤러와 통신이 해제되었습니다.')
+        else:
+            print('Indy7 컨트롤러와 통신이 연결되어있지 않습니다.')
 
 
 # pymcprotocol.Type3E 래퍼
 class PLCInterface:
-    def connect(): #PLC 통신 연결
-        print('PLC 통신 연결')
+    def __init__(self, plc_ip: str, plc_port):
+        self.plc= Type3E()
+        self.plc_ip = plc_ip
+        self.plc_port = plc_port
+        self._is_connected = False
 
-    def close(): #PLC 통신 해제
-        print('PLC 통신 해제')
+    def connect(self): #PLC 통신 연결
+        if not self._is_connected:
+            self.plc.connect(self.plc_ip, self.plc_port)
+            self._is_connected = True
+            print('PLC 통신이 연결되었습니다.')
+        else:
+            print('PLC와 이미 통신 중입니다.')
 
-    def read_bit(address): #지정 비트 디바이스 상태 조회
+    def close(self): #PLC 통신 해제
+        if self._is_connected:
+            self.plc.close()
+            self._is_connected = False
+            print('PLC 통신이 해제되었습니다.')
+        else:
+            print('PLC와 통신이 연결되어있지 않습니다.')
+
+
+    def read_bit(self, address): #지정 비트 디바이스 상태 조회
+        start_signal = self.plc.batchread_bitunits(address, 1)[0]
         print('지정 비트 디바이스 상태 조회 완료')
+        return start_signal
 
-    def write_bit(address, value): #지정 비트 디바이스에 값 기록
+    def write_bit(self, address, value): #지정 비트 디바이스에 값 기록
+        int_value = 1 if value else 0
+        self.plc.batchwrite_bitunits(address, [int_value])
         print('비트 디바이스 단위 쓰기 완료')
