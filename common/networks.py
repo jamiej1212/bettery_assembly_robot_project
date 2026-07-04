@@ -22,17 +22,17 @@ class RobotClient:
         if not self._is_connected:
             self.indy.connect()
             self._is_connected = True
-            print('Indy7 컨트롤러와 통신이 연결되었습니다.')
+            print('[INFO] Indy7 컨트롤러와 통신이 연결되었습니다.')
         else:
-            print('Indy7 컨트롤러와 이미 통신 중입니다.')
+            print('[INFO] Indy7 컨트롤러와 이미 통신 중입니다.')
 
     def disconnect(self) -> None:
         if self._is_connected:
             self.indy.disconnect()
             self._is_connected = False
-            print('Indy7 컨트롤러와 통신이 해제되었습니다.')
+            print('[INFO] Indy7 컨트롤러와 통신이 해제되었습니다.')
         else:
-            print('Indy7 컨트롤러와 통신이 연결되어있지 않습니다.')
+            print('[INFO] Indy7 컨트롤러와 통신이 연결되어있지 않습니다.')
 
 
 # pymcprotocol.Type3E 래퍼
@@ -47,25 +47,25 @@ class PLCInterface:
         if not self._is_connected:
             self.plc.connect(self.plc_ip, self.plc_port)
             self._is_connected = True
-            print('PLC 통신이 연결되었습니다.')
+            print('[INFO] PLC 통신이 연결되었습니다.')
         else:
-            print('PLC와 이미 통신 중입니다.')
+            print('[INFO] PLC와 이미 통신 중입니다.')
 
     def close(self): #PLC 통신 해제
         if self._is_connected:
             self.plc.close()
             self._is_connected = False
-            print('PLC 통신이 해제되었습니다.')
+            print('[INFO] PLC 통신이 해제되었습니다.')
         else:
-            print('PLC와 통신이 연결되어있지 않습니다.')
+            print('[INFO] PLC와 통신이 연결되어있지 않습니다.')
 
 
-    def read_bit(self, address): #지정 비트 디바이스 상태 조회
+    def read_bit(self, address: str): #지정 비트 디바이스 상태 조회
         start_signal = self.plc.batchread_bitunits(address, 1)[0]
-        print('지정 비트 디바이스 상태 조회 완료')
+        print(f'[INFO] {address} 디바이스 상태 조회 완료: {bool(start_signal)}')
         return start_signal
 
-    def write_bit(self, address, value): #지정 비트 디바이스에 값 기록
+    def write_bit(self, address:str , value: bool): #지정 비트 디바이스에 값 기록
         int_value = 1 if value else 0
         self.plc.batchwrite_bitunits(address, [int_value])
-        print('비트 디바이스 단위 쓰기 완료')
+        print(f'[INFO] {address} 디바이스 단위 쓰기 완료: {value}')
