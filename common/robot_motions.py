@@ -1,11 +1,13 @@
 # common/robot_motion.py
 import time
 from common.networks import RobotInterface
+from common.utils import generate_grid
 
 class RobotClient(RobotInterface):
     def __init__(self, config):
         super().__init__(config.ROBOT_IP, config.ROBOT_NAME)
         self.config = config
+        self._is_paused = False
 
     def _check_move_done(self) -> None:
         while True:
@@ -37,3 +39,32 @@ class RobotClient(RobotInterface):
     def return_home(self) -> None:
         self.indy.go_home()
         self._check_move_done()
+
+    def pause(self) -> None:
+        if self._is_paused:
+            return
+        self.indy.stop_motion()
+        self._is_paused = True
+    
+    @property
+    def is_paused(self) -> bool:
+        return self._is_paused
+    
+    def resume(self) -> None:
+        if not self._is_paused:
+            return
+        self._is_paused = False
+
+    def emergency_stop(self) -> None:
+        self.indy.stop_emergency()
+
+    def reset_emergency(self) -> None:
+        self.indy.reset_robot()
+
+    def get_coords(self, index, cnt) -> list:
+        grid_list = ['CELL_STORAGE_GRID_PARAMS', 'CELL_INSERT_GRID_PARAMS', 'CELL_DISCARD_GRID_PARAMS']
+        target_grid = grid_list[index]
+        grid_params = getattr(self.config, target_grid)[cnt]
+        coords = generate_grid(**grid_params)
+        return coords
+        
