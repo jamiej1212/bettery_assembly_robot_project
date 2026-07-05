@@ -1,0 +1,3 @@
+PLC_IP = "192.168.3.130"
+PLC_PORT = 1025
+START_SIGNAL_ADDRESS="Y23" # 스토퍼센서가 매핑된 PLC 비트 주소
